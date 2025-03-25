@@ -66,7 +66,7 @@ def cryptage(doc,ch_dep):
 
     return fichier_crypte
 
-#test
+# test le programme
 """
 ch = r"d:\Baptiste\Perso\CPE Prépa\TIPE crypto python"
 doc = r"d:\Baptiste\Perso\CPE Prépa\TIPE crypto python\antho.txt"
