@@ -15,7 +15,7 @@ fichier_clé = ""
 def window_crypt():
     """Page de cryptage"""
 
-    global fichier_selectionne, dossier_selectionne
+    global fichier_selectionne, dossier_selectionne, fichier_clé
 
     if not fichier_selectionne or not dossier_selectionne:
         messagebox.showwarning("Erreur", "Veuillez sélectionner un fichier et un dossier !")
@@ -37,15 +37,15 @@ def window_crypt():
 def window_uncrypt():
     """Page de décryptage"""
     # Création de la fenêtre de decryptage
-    global fichier_selectionne, dossier_selectionne
+    global fichier_selectionne, dossier_selectionne, fichier_clé
 
-    if not fichier_selectionne or not dossier_selectionne:
+    if not fichier_selectionne or not dossier_selectionne or not fichier_clé:
         messagebox.showwarning("Erreur", "Veuillez sélectionner un fichier et un dossier !")
         return
 
     try:
         print("ok")
-        key = load_key(dossier_selectionne, fichier_selectionne)
+        key = load_key(fichier_clé)
         fichier_decrypte = decrypto(fichier_selectionne, dossier_selectionne, key)
         messagebox.showinfo("Succès", f"Fichier décrypté enregistré sous : {fichier_decrypte}")
 
