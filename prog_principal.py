@@ -2,17 +2,20 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from crypto5 import *
 from decrypto4 import *
+from threading import Thread 
+
 
 #V1.2 
 # Optimisation et fixe les bugs
 
 fichier_selectionne = ""
 dossier_selectionne = ""
+fichier_clé = ""
 
 def window_crypt():
     """Page de cryptage"""
 
-    global fichier_selectionne, dossier_selectionne
+    global fichier_selectionne, dossier_selectionne, fichier_clé
 
     if not fichier_selectionne or not dossier_selectionne:
         messagebox.showwarning("Erreur", "Veuillez sélectionner un fichier et un dossier !")
@@ -34,15 +37,15 @@ def window_crypt():
 def window_uncrypt():
     """Page de décryptage"""
     # Création de la fenêtre de decryptage
-    global fichier_selectionne, dossier_selectionne
+    global fichier_selectionne, dossier_selectionne, fichier_clé
 
-    if not fichier_selectionne or not dossier_selectionne:
+    if not fichier_selectionne or not dossier_selectionne or not fichier_clé:
         messagebox.showwarning("Erreur", "Veuillez sélectionner un fichier et un dossier !")
         return
 
     try:
         print("ok")
-        key = load_key(dossier_selectionne, fichier_selectionne)
+        key = load_key(fichier_clé)
         fichier_decrypte = decrypto(fichier_selectionne, dossier_selectionne, key)
         messagebox.showinfo("Succès", f"Fichier décrypté enregistré sous : {fichier_decrypte}")
 
@@ -63,6 +66,14 @@ def choisir_dossier():
     dossier_selectionne = filedialog.askdirectory(title="Sélectionnez un dossier")
     if dossier_selectionne:
         lbl_dossier.config(text=f"Dossier sélectionné : {dossier_selectionne}")
+
+def choisir_f_clé():
+    """Sélectionne le fichier clé et met a jour l'affichage"""
+    global fichier_clé
+    fichier_clé = filedialog.askdirectory(title="Sélectionnez le fichier de clé")
+    if fichier_clé:
+        lbl_clé.config(text=f"Fichier clé : {fichier_clé}")
+
 
     
 """forme de la page """
@@ -88,6 +99,11 @@ tk.Button(root, text="📂 Choisir un fichier", command=choisir_fichier).pack(pa
 lbl_dossier = tk.Label(root, text="Aucun dossier sélectionné", wraplength=350, justify="center")
 lbl_dossier.pack()
 tk.Button(root, text="📁 Choisir un dossier", command=choisir_dossier).pack(pady=20)
+
+# Sélection du fichier clé
+lbl_clé = tk.label(root, text="Aucun fichier clé sélectionné", fg="blue", wraplength=220)
+lbl_clé.pack()
+tk.Button(root, text="📁 Choisir un fichier clé", command=choisir_f_clé).pack(pady=20)
 
 # Lancer l'interface graphique
 root.mainloop()
