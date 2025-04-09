@@ -2,12 +2,15 @@ from cryptography.fernet import Fernet
 import os
 from threading import Thread
 
+#a faire:
+"""Ajout de theadring afin d'utliser des coeurs pour charger la clé et d'autres pour decrypter 
+le fichier en plusieurs morceaux afin d'optimiser le temps de traitement"""
+
 
 
 # Fonction pour charger la clé depuis un fichier
 def load_key(doc, ch_clé):
     """Charge la clé de chiffrement depuis un fichier"""
-    print("ok2")
     key_path = os.path.join(ch_clé, "key.key")
     
     if not os.path.exists(key_path):
@@ -23,16 +26,12 @@ def load_key(doc, ch_clé):
             continue
         
         try:
-            print("ok3")
             fichier, cle = ligne.split("|")  # Sépare le fichier et la clé
-            print(fichier,cle)
             base, ext = os.path.splitext(fichier)
             fichier = base + "_crypt" + ext
             L = doc.split("/")
             L2 = L[-1]
-            print(fichier, L2)
             if fichier == L2:  # Vérifie si c'est la bonne clé
-                print(fichier,cle)
                 return cle.encode()  # Convertit la clé en format binaire
         except ValueError:
             print(f"Erreur de format dans la ligne : {ligne}. Le format attendu est 'fichier|clé'.")
