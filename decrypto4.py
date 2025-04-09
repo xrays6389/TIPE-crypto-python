@@ -5,9 +5,10 @@ import os
 # Optimisation du prgramme et rajout pour meilleur fonctionnement
 
 # Fonction pour charger la clé depuis un fichier
-def load_key(ch_dep, doc):
+def load_key(doc, ch_clé):
+    """Charge la clé de chiffrement depuis un fichier"""
     print("ok2")
-    key_path = os.path.join(ch_dep, "key.key")
+    key_path = os.path.join(ch_clé, "key.key")
     
     if not os.path.exists(key_path):
         raise FileNotFoundError(f"Clé introuvable : {key_path}")
