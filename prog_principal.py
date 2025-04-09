@@ -10,15 +10,15 @@ from threading import Thread
 
 fichier_selectionne = ""
 dossier_selectionne = ""
-fichier_clé = ""
+dossier_clé = ""
 
 def window_crypt():
     """Page de cryptage"""
 
-    global fichier_selectionne, dossier_selectionne, fichier_clé
+    global fichier_selectionne, dossier_selectionne, dossier_clé
 
-    if not fichier_selectionne or not dossier_selectionne:
-        messagebox.showwarning("Erreur", "Veuillez sélectionner un fichier et un dossier !")
+    if not fichier_selectionne or not dossier_selectionne or not dossier_clé:
+        messagebox.showwarning("Erreur", "Veuillez sélectionner un fichier, un dossier et le dossier pour la clé !")
         return
 
     try:
@@ -28,7 +28,7 @@ def window_crypt():
             print("Fichier trouvé et ouvert avec succès !")
 
         # Chiffrement
-        fichier_crypte = cryptage(fichier_selectionne, dossier_selectionne)
+        fichier_crypte = cryptage(fichier_selectionne, dossier_selectionne, dossier_clé)
         messagebox.showinfo("Succès", f"Fichier crypté enregistré sous : {fichier_crypte}")
 
     except Exception as e:
@@ -37,15 +37,15 @@ def window_crypt():
 def window_uncrypt():
     """Page de décryptage"""
     # Création de la fenêtre de decryptage
-    global fichier_selectionne, dossier_selectionne, fichier_clé
+    global fichier_selectionne, dossier_selectionne, dossier_clé
 
-    if not fichier_selectionne or not dossier_selectionne or not fichier_clé:
+    if not fichier_selectionne or not dossier_selectionne or not dossier_clé:
         messagebox.showwarning("Erreur", "Veuillez sélectionner un fichier et un dossier !")
         return
 
     try:
         print("ok")
-        key = load_key(fichier_clé)
+        key = load_key(fichier_selectionne, dossier_clé)
         fichier_decrypte = decrypto(fichier_selectionne, dossier_selectionne, key)
         messagebox.showinfo("Succès", f"Fichier décrypté enregistré sous : {fichier_decrypte}")
 
@@ -67,12 +67,12 @@ def choisir_dossier():
     if dossier_selectionne:
         lbl_dossier.config(text=f"Dossier sélectionné : {dossier_selectionne}")
 
-def choisir_f_clé():
+def choisir_d_clé():
     """Sélectionne le fichier clé et met a jour l'affichage"""
-    global fichier_clé
-    fichier_clé = filedialog.askdirectory(title="Sélectionnez le fichier de clé")
-    if fichier_clé:
-        lbl_clé.config(text=f"Fichier clé : {fichier_clé}")
+    global dossier_clé
+    dossier_clé = filedialog.askdirectory(title="Sélectionnez le dossier avec la clé")
+    if dossier_clé:
+        lbl_clé.config(text=f"Fichier clé : {dossier_clé}")
 
 
     
@@ -81,7 +81,7 @@ def choisir_f_clé():
 # Création de la fenêtre principale
 root = tk.Tk()
 root.title("Cryptage & Décryptage")
-root.geometry("600x400")
+root.geometry("700x500")
 
 # Titre
 tk.Label(root, text="Sélectionnez la méthode voulue", font=("Arial", 14, "bold")).pack(pady=10)
@@ -96,14 +96,14 @@ lbl_fichier.pack(pady=5)
 tk.Button(root, text="📂 Choisir un fichier", command=choisir_fichier).pack(pady=5)
 
 # Sélection de dossier
-lbl_dossier = tk.Label(root, text="Aucun dossier sélectionné", wraplength=350, justify="center")
+lbl_dossier = tk.Label(root, text="Aucun dossier sélectionné", fg="blue", wraplength=350, justify="center")
 lbl_dossier.pack()
 tk.Button(root, text="📁 Choisir un dossier", command=choisir_dossier).pack(pady=20)
 
 # Sélection du fichier clé
-lbl_clé = tk.label(root, text="Aucun fichier clé sélectionné", fg="blue", wraplength=220)
+lbl_clé = tk.Label(root, text="Aucun dossier clé sélectionné", fg="blue", wraplength=220)
 lbl_clé.pack()
-tk.Button(root, text="📁 Choisir un fichier clé", command=choisir_f_clé).pack(pady=20)
+tk.Button(root, text="📁 Choisir un dossier clé", command=choisir_d_clé).pack(pady=20)
 
 # Lancer l'interface graphique
 root.mainloop()
