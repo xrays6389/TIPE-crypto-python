@@ -5,9 +5,9 @@ import os
 #potentiel probleme lors de generation de clé ou de cryptage reglé ainsi qu'ajout d'un suffixe au fichier
 
 
-def cryptage(doc,ch_dep): 
+def cryptage(doc,ch_dep,ch_clé): 
 
-    key_path = os.path.join(ch_dep, "key.key")
+    key_path = os.path.join(ch_clé, "key.key")
 
     # Vérifie si le fichier key.key existe, sinon le crée
     if not os.path.exists(key_path):
