@@ -1,8 +1,8 @@
 from cryptography.fernet import Fernet
 import os
+from threading import Thread
 
-#V1.3
-# Optimisation du prgramme et rajout pour meilleur fonctionnement
+
 
 # Fonction pour charger la clé depuis un fichier
 def load_key(doc, ch_clé):
