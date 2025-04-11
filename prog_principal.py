@@ -58,7 +58,7 @@ def choisir_fichier():
 def choisir_dossier():
     """Sélectionne un dossier et met à jour l'affichage"""
     global dossier_selectionne
-    dossier_selectionne = filedialog.askdirectory(title="Sélectionnez un dossier")
+    dossier_selectionne = filedialog.askdirectory(title="Sélectionnez un dossier de sauvegarde")
     if dossier_selectionne:
         lbl_dossier.config(text=f"Dossier sélectionné : {dossier_selectionne}")
 
