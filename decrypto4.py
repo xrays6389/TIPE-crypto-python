@@ -44,7 +44,7 @@ def decrypto(doc_crypt, ch_dep, key):
     fernet = Fernet(key)
 
     # Lecture du fichier crypté
-    chemin = os.path.join(ch_dep, doc_crypt) 
+    chemin = os.path.join(doc_crypt) 
 
     if not os.path.exists(chemin):
         raise FileNotFoundError(f"Fichier crypté introuvable : {chemin}")
