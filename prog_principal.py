@@ -4,10 +4,6 @@ from crypto5 import *
 from decrypto4 import *
 from threading import Thread 
 
-
-#V1.2 
-# Optimisation et fixe les bugs
-
 fichier_selectionne = ""
 dossier_selectionne = ""
 dossier_clé = ""
@@ -44,9 +40,7 @@ def window_uncrypt():
         return
 
     try:
-        key = Thread(target=load_key, args=(fichier_selectionne, dossier_clé))
-        key.start()
-        key.join()  # Attendre que le thread de chargement de la clé soit terminé
+        key = load_key(fichier_selectionne, dossier_clé)
         fichier_decrypte = decrypto(fichier_selectionne, dossier_selectionne, key)
         messagebox.showinfo("Succès", f"Fichier décrypté enregistré sous : {fichier_decrypte}")
 
@@ -108,8 +102,3 @@ tk.Button(root, text="📁 Choisir un dossier clé", command=choisir_d_clé).pac
 
 # Lancer l'interface graphique
 root.mainloop()
-
-
-
-
-
