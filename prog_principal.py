@@ -40,12 +40,13 @@ def window_uncrypt():
     global fichier_selectionne, dossier_selectionne, dossier_clé
 
     if not fichier_selectionne or not dossier_selectionne or not dossier_clé:
-        messagebox.showwarning("Erreur", "Veuillez sélectionner un fichier et un dossier !")
+        messagebox.showwarning("Erreur", "Veuillez sélectionner un fichier, un dossier et le dossier pour la clé !")
         return
 
     try:
-        print("ok")
-        key = load_key(fichier_selectionne, dossier_clé)
+        key = Thread(target=load_key, args=(fichier_selectionne, dossier_clé))
+        key.start()
+        key.join()  # Attendre que le thread de chargement de la clé soit terminé
         fichier_decrypte = decrypto(fichier_selectionne, dossier_selectionne, key)
         messagebox.showinfo("Succès", f"Fichier décrypté enregistré sous : {fichier_decrypte}")
 
