@@ -56,7 +56,7 @@ def decrypto(doc_crypt, ch_dep, key):
     decrypted_data = fernet.decrypt(encrypted_data)
 
     # Ajout d'un suffixe au fichier déchiffré
-    chemin, base, ext = os.path.splitext(doc_crypt)
+    base, ext = os.path.splitext(doc_crypt)
     if base.endswith("_crypt"):  # Vérifie si le fichier a bien été crypté avec le suffixe
         fichier_sortie = base[:-6] + ext  # Supprime "_crypt" du nom
     else:

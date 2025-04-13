@@ -57,6 +57,7 @@ def cryptage(doc,ch_dep,ch_clé):
 
     base, ext = os.path.splitext(doc)
     fichier_crypte = base + "_crypt" + ext
+    print(fichier_crypte)
     chemin = os.path.join(ch_dep, fichier_crypte)
 
     # Écriture du fichier crypté
