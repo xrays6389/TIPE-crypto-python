@@ -59,8 +59,13 @@ def decrypto(doc_crypt, ch_dep, key):
     base, ext = os.path.splitext(doc_crypt)
     if base.endswith("_crypt"):  # Vérifie si le fichier a bien été crypté avec le suffixe
         fichier_sortie = base[:-6] + ext  # Supprime "_crypt" du nom
+        f_s = fichier_sortie.split("/")
+        fichier_sortie = f_s[-1]
+        print(fichier_sortie)
     else:
         fichier_sortie = "decrypted_" + doc_crypt  # Si pas de suffixe, on renomme avec "decrypted_"
+        f_s = fichier_sortie.split("/")
+        fichier_sortie = f_s[-1]
 
     # Écriture du fichier déchiffré
     os.remove(doc_crypt) # Supprime le document crypté
