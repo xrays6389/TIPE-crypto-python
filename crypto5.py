@@ -1,10 +1,6 @@
 from cryptography.fernet import Fernet 
 import os
 
-#V1.4
-#potentiel probleme lors de generation de clé ou de cryptage reglé ainsi qu'ajout d'un suffixe au fichier
-
-
 def cryptage(doc,ch_dep,ch_clé): 
 
     key_path = os.path.join(ch_clé, "key.key")
@@ -61,12 +57,10 @@ def cryptage(doc,ch_dep,ch_clé):
     fichier_crypte = f_s[-1]
     print(fichier_crypte)
     chemin = os.path.join(ch_dep, fichier_crypte)
-
     # Écriture du fichier crypté
     os.remove(doc) # Supprime le document original
     with open(chemin, "wb") as file:
         file.write(crypt)
-
     return chemin  # Retourne le chemin du fichier crypté
 
 # test le programme

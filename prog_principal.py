@@ -3,10 +3,12 @@ from tkinter import filedialog, messagebox
 from crypto5 import *
 from decrypto4 import *
 from threading import Thread 
+from concurrent.futures import ThreadPoolExecutor
 
 fichier_selectionne = ""
 dossier_selectionne = ""
 dossier_clé = ""
+executor = ThreadPoolExecutor(max_workers=2)
 
 def window_crypt():
     """Page de cryptage"""
@@ -24,8 +26,17 @@ def window_crypt():
             print("Fichier trouvé et ouvert avec succès !")
 
         # Chiffrement
-        fichier_crypte = cryptage(fichier_selectionne, dossier_selectionne, dossier_clé)
-        messagebox.showinfo("Succès", f"Fichier crypté enregistré sous : {fichier_crypte}")
+        future = executor.submit(cryptage, fichier_selectionne, dossier_selectionne, dossier_clé)
+        def on_done(future):
+            try:
+                chemin = future.result()
+                # Afficher un message de succès
+            except Exception as e:
+                messagebox.showerror("Erreur", f"Erreur lors du cryptage : {e}")
+                return
+            else:
+                root.after(0, lambda: messagebox.showinfo("Succès", f"Fichier crypté enregistré sous : {chemin}"))
+        future.add_done_callback(on_done)
 
     except Exception as e:
         messagebox.showerror("Erreur", f"Erreur lors du cryptage : {e}")
