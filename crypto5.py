@@ -19,6 +19,7 @@ def cryptage(doc,ch_dep,ch_clé):
 
         if not ligne:  # Ignore les lignes vides
             continue
+   
         
         try:
             fichier, cle = ligne.split("|")  # Sépare le nom du fichier et la clé
