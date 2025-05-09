@@ -26,7 +26,7 @@ def window_crypt():
             print("Fichier trouvé et ouvert avec succès !")
 
         # Chiffrement
-        future = executor.submit(cryptage, fichier_selectionne, dossier_selectionne, dossier_clé)
+        future = executor.submit(encrypt_file, fichier_selectionne, dossier_selectionne, dossier_clé)
         def on_done(future):
             try:
                 chemin = future.result()
