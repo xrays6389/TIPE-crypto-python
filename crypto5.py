@@ -1,74 +1,88 @@
 from cryptography.fernet import Fernet 
 import os
+import math
+from concurrent.futures import ThreadPoolExecutor
 
-def cryptage(doc,ch_dep,ch_clé): 
+executor = ThreadPoolExecutor(max_workers=4)
 
+def cryptage(doc, ch_dep, ch_clé): 
     key_path = os.path.join(ch_clé, "key.key")
 
-    # Vérifie si le fichier key.key existe, sinon le crée
+    # Crée le fichier key.key s’il n’existe pas
     if not os.path.exists(key_path):
-        with open(key_path, "w") as key_file: 
+        with open(key_path, "w"): 
             pass  
-        
-    # Vérifie si le fichier key.key contient déjà une clé pour ce fichier
+
+    # Cherche si une clé existe déjà pour ce fichier
+    key = None
     with open(key_path, "r", encoding="utf-8") as key_file:
-        lignes = key_file.readlines()  # Lire toutes les lignes du fichier de clés
+        lignes = key_file.readlines()
 
     for ligne in lignes:
         ligne = ligne.strip()
-
-        if not ligne:  # Ignore les lignes vides
+        if not ligne:
             continue
-   
-        
         try:
-            fichier, cle = ligne.split("|")  # Sépare le nom du fichier et la clé
-            if fichier == os.path.basename(doc):  # Si le fichier à crypter a déjà une clé
-                key = cle.encode()  # Récupère la clé existante au lieu d'en créer une nouvelle
+            fichier, cle = ligne.split("|")
+            if fichier == os.path.basename(doc):
+                key = cle.encode()
                 break
         except ValueError:
-            print(f"Erreur de format dans la ligne : {ligne}. Le format attendu est 'fichier|clé'.")
-            continue  # Ignore les lignes mal formatées
+            print(f"Erreur de format dans la ligne : {ligne}")
+            continue
 
-    else:
-        # Si aucune clé n'a été trouvée, on génère une nouvelle clé et on l'ajoute au fichier de clés
-        try:
-            key = Fernet.generate_key()
-            L2 = os.path.basename(doc)  # Récupère directement le nom du fichier
-    
-            with open(key_path, "a", encoding="utf-8") as key_file:
-                key_file.write(f"{L2}|{key.decode()}\n")
+    # Sinon, génère une nouvelle clé
+    if not key:
+        key = Fernet.generate_key()
+        with open(key_path, "a", encoding="utf-8") as key_file:
+            key_file.write(f"{os.path.basename(doc)}|{key.decode()}\n")
+        print(f"Clé générée et stockée pour {os.path.basename(doc)}")
 
-            print(f"Clé générée et stockée pour {L2}")
-
-        except Exception as e:
-            print(f"Erreur : {e}")
-
-    # Lire le fichier et le convertir en bytes
-    with open(doc, "rb") as file:
-        contenu = file.read()
-
-    # Cryptage du document
     fernet = Fernet(key)
-    crypt=Fernet(key).encrypt(contenu) #crypte seulement des bytes
+    nb_parts = 4
+    morceaux = []
 
+    # Étape 1 : Découpage du fichier
+    taille_fichier = os.path.getsize(doc)
+    taille_morceau = math.ceil(taille_fichier / nb_parts)
+
+    with open(doc, "rb") as file:
+        for i in range(nb_parts):
+            morceau = file.read(taille_morceau)
+            if not morceau:
+                break
+            nom_morceau = f"{doc}_part{i}"
+            with open(nom_morceau, 'wb') as f_part:
+                f_part.write( morceau)
+            morceaux.append(nom_morceau)
+
+    # Étape 2 : Chiffrement parallèle
+    def chiffrer_fichier(nom_fichier):
+        with open(nom_fichier, 'rb') as f:
+            contenu = f.read()
+        return fernet.encrypt(contenu)
+
+    with ThreadPoolExecutor(max_workers=nb_parts) as executor:
+        futures = [executor.submit(chiffrer_fichier, fichier) for fichier in morceaux]
+        fichiers_chiffres = [f.result() for f in futures]
+
+    # Étape 3 : Concaténation
+    crypt = b''.join(fichiers_chiffres)
+
+    # Étape 4 : Déterminer le nom de sortie
     base, ext = os.path.splitext(doc)
-    fichier_crypte = base + "_crypt" + ext
-    f_s = fichier_crypte.split("/")
-    fichier_crypte = f_s[-1]
-    print(fichier_crypte)
+    fichier_crypte = os.path.basename(base + "_crypt" + ext)
     chemin = os.path.join(ch_dep, fichier_crypte)
-    # Écriture du fichier crypté
-    os.remove(doc) # Supprime le document original
+
+    # Étape 5 : Suppression de l’original
+    os.remove(doc)
+
+    # Étape 6 : Écriture du fichier chiffré
     with open(chemin, "wb") as file:
         file.write(crypt)
-    return chemin  # Retourne le chemin du fichier crypté
 
-# test le programme
-"""
-ch = r"d:\Baptiste\Perso\CPE Prépa\TIPE crypto python"
-doc = r"d:\Baptiste\Perso\CPE Prépa\TIPE crypto python\antho.txt"
-doc = doc.strip()
-doc = cryptage(doc,ch)
-print (doc)
-"""
+    # Étape 7 : Nettoyage des morceaux
+    for morceau in morceaux:
+        os.remove(morceau)
+
+    return chemin  # Chemin du fichier chiffré

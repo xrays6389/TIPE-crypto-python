@@ -2,11 +2,6 @@ from cryptography.fernet import Fernet
 import os
 from threading import Thread
 
-#a faire:
-"""Ajout de theadring afin d'utliser des coeurs pour charger la clé et d'autres pour decrypter 
-le fichier en plusieurs morceaux afin d'optimiser le temps de traitement"""
-
-
 
 # Fonction pour charger la clé depuis un fichier
 def load_key(doc, ch_clé):
