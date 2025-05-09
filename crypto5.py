@@ -1,88 +1,80 @@
-from cryptography.fernet import Fernet 
 import os
 import math
+from cryptography.fernet import Fernet
 from concurrent.futures import ThreadPoolExecutor
 
-executor = ThreadPoolExecutor(max_workers=4)
 
-def cryptage(doc, ch_dep, ch_clé): 
-    key_path = os.path.join(ch_clé, "key.key")
+def generate_key(file_name, key_dir):
+    key_path = os.path.join(key_dir, "key.key")
+    os.makedirs(key_dir, exist_ok=True)
 
-    # Crée le fichier key.key s’il n’existe pas
     if not os.path.exists(key_path):
-        with open(key_path, "w"): 
-            pass  
+        open(key_path, "w").close()
+        os.chmod(key_path, 0o600)  # Permissions strictes pour la sécurité
 
-    # Cherche si une clé existe déjà pour ce fichier
-    key = None
     with open(key_path, "r", encoding="utf-8") as key_file:
-        lignes = key_file.readlines()
+        for line in key_file.readlines():
+            try:
+                fichier, cle = line.strip().split("|")
+                if fichier == file_name:
+                    return cle.encode()
+            except ValueError:
+                print(f"[Erreur] Ligne incorrecte dans le fichier de clés : {line.strip()}")
 
-    for ligne in lignes:
-        ligne = ligne.strip()
-        if not ligne:
-            continue
+    # Génération d'une nouvelle clé si aucune clé existante n'a été trouvée
+    new_key = Fernet.generate_key()
+    with open(key_path, "a", encoding="utf-8") as key_file:
+        key_file.write(f"{file_name}|{new_key.decode()}\n")
+    print(f"[Info] Nouvelle clé générée pour {file_name}")
+    return new_key
+
+
+def encrypt_chunk(file_path, chunk_index, key, chunk_size):
+    chunk_name = f"{file_path}_part{chunk_index}"
+    with open(file_path, "rb") as f:
+        f.seek(chunk_index * chunk_size)
+        chunk_data = f.read(chunk_size)
+
+    if chunk_data:
+        fernet = Fernet(key)
+        encrypted_data = fernet.encrypt(chunk_data)
+        with open(chunk_name, "wb") as chunk_file:
+            chunk_file.write(encrypted_data)
+
+    return chunk_name
+
+
+def assemble_encrypted_file(output_path, chunks):
+    with open(output_path, "wb") as final_file:
+        for chunk in chunks:
+            with open(chunk, "rb") as chunk_file:
+                final_file.write(chunk_file.read())
+
+
+def cleanup_chunks(chunks):
+    for chunk in chunks:
         try:
-            fichier, cle = ligne.split("|")
-            if fichier == os.path.basename(doc):
-                key = cle.encode()
-                break
-        except ValueError:
-            print(f"Erreur de format dans la ligne : {ligne}")
-            continue
+            os.remove(chunk)
+        except FileNotFoundError:
+            print(f"[Avertissement] Le morceau {chunk} n'existe pas ou a déjà été supprimé.")
 
-    # Sinon, génère une nouvelle clé
-    if not key:
-        key = Fernet.generate_key()
-        with open(key_path, "a", encoding="utf-8") as key_file:
-            key_file.write(f"{os.path.basename(doc)}|{key.decode()}\n")
-        print(f"Clé générée et stockée pour {os.path.basename(doc)}")
 
-    fernet = Fernet(key)
-    nb_parts = 4
-    morceaux = []
+def encrypt_file(file_path, output_dir, key_dir, num_chunks=4):
+    file_name = os.path.basename(file_path)
+    key = generate_key(file_name, key_dir)
+    file_size = os.path.getsize(file_path)
+    chunk_size = math.ceil(file_size / num_chunks)
 
-    # Étape 1 : Découpage du fichier
-    taille_fichier = os.path.getsize(doc)
-    taille_morceau = math.ceil(taille_fichier / nb_parts)
+    with ThreadPoolExecutor(max_workers=num_chunks) as executor:
+        chunks = list(executor.map(
+            lambda i: encrypt_chunk(file_path, i, key, chunk_size),
+            range(num_chunks)
+        ))
 
-    with open(doc, "rb") as file:
-        for i in range(nb_parts):
-            morceau = file.read(taille_morceau)
-            if not morceau:
-                break
-            nom_morceau = f"{doc}_part{i}"
-            with open(nom_morceau, 'wb') as f_part:
-                f_part.write( morceau)
-            morceaux.append(nom_morceau)
+    output_file = os.path.join(output_dir, f"{os.path.splitext(file_name)[0]}_encrypted{os.path.splitext(file_name)[1]}")
+    assemble_encrypted_file(output_file, chunks)
+    cleanup_chunks(chunks)
 
-    # Étape 2 : Chiffrement parallèle
-    def chiffrer_fichier(nom_fichier):
-        with open(nom_fichier, 'rb') as f:
-            contenu = f.read()
-        return fernet.encrypt(contenu)
-
-    with ThreadPoolExecutor(max_workers=nb_parts) as executor:
-        futures = [executor.submit(chiffrer_fichier, fichier) for fichier in morceaux]
-        fichiers_chiffres = [f.result() for f in futures]
-
-    # Étape 3 : Concaténation
-    crypt = b''.join(fichiers_chiffres)
-
-    # Étape 4 : Déterminer le nom de sortie
-    base, ext = os.path.splitext(doc)
-    fichier_crypte = os.path.basename(base + "_crypt" + ext)
-    chemin = os.path.join(ch_dep, fichier_crypte)
-
-    # Étape 5 : Suppression de l’original
-    os.remove(doc)
-
-    # Étape 6 : Écriture du fichier chiffré
-    with open(chemin, "wb") as file:
-        file.write(crypt)
-
-    # Étape 7 : Nettoyage des morceaux
-    for morceau in morceaux:
-        os.remove(morceau)
-
-    return chemin  # Chemin du fichier chiffré
+    os.remove(file_path)  # Suppression du fichier original
+    print(f"[Succès] Fichier chiffré sauvegardé sous {output_file}")
+    return output_file
