@@ -45,10 +45,22 @@ def encrypt_chunk(file_path, chunk_index, key, chunk_size):
 
 
 def assemble_encrypted_file(output_path, chunks):
+    # Vérification des morceaux avant assemblage
+    try:
+        chunks.sort(key=lambda x: int(x.split('_part')[-1]))
+    except ValueError as e:
+        print(f"[Erreur] Numéro de morceau invalide : {e}")
+        return False
+
     with open(output_path, "wb") as final_file:
         for chunk in chunks:
+            if not os.path.exists(chunk):
+                print(f"[Erreur] Le morceau {chunk} est manquant !")
+                return False
             with open(chunk, "rb") as chunk_file:
                 final_file.write(chunk_file.read())
+    print(f"[Succès] Fichier assemblé sous {output_path}")
+    return True
 
 
 def cleanup_chunks(chunks):
@@ -72,9 +84,11 @@ def encrypt_file(file_path, output_dir, key_dir, num_chunks=4):
         ))
 
     output_file = os.path.join(output_dir, f"{os.path.splitext(file_name)[0]}_encrypted{os.path.splitext(file_name)[1]}")
-    assemble_encrypted_file(output_file, chunks)
-    cleanup_chunks(chunks)
-
-    os.remove(file_path)  # Suppression du fichier original
-    print(f"[Succès] Fichier chiffré sauvegardé sous {output_file}")
-    return output_file
+    if assemble_encrypted_file(output_file, chunks):
+        cleanup_chunks(chunks)
+        os.remove(file_path)  # Suppression du fichier original
+        print(f"[Succès] Fichier chiffré sauvegardé sous {output_file}")
+        return output_file
+    else:
+        print("[Erreur] Assemblage des morceaux échoué.")
+        return None

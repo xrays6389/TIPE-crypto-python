@@ -52,7 +52,7 @@ def window_uncrypt():
 
     try:
         key = load_key(fichier_selectionne, dossier_clé)
-        fichier_decrypte = decrypto(fichier_selectionne, dossier_selectionne, key)
+        fichier_decrypte = decrypt_file(fichier_selectionne, dossier_selectionne, key)
         messagebox.showinfo("Succès", f"Fichier décrypté enregistré sous : {fichier_decrypte}")
 
     except Exception as e:
