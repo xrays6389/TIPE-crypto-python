@@ -43,20 +43,25 @@ def window_crypt():
 
 def window_uncrypt():
     """Page de décryptage"""
-    # Création de la fenêtre de decryptage
     global fichier_selectionne, dossier_selectionne, dossier_clé
 
     if not fichier_selectionne or not dossier_selectionne or not dossier_clé:
         messagebox.showwarning("Erreur", "Veuillez sélectionner un fichier, un dossier et le dossier pour la clé !")
         return
 
-    try:
-        key = load_key(fichier_selectionne, dossier_clé)
-        fichier_decrypte = decrypt_file(fichier_selectionne, dossier_selectionne, key)
-        messagebox.showinfo("Succès", f"Fichier décrypté enregistré sous : {fichier_decrypte}")
+    # Décryptage en tâche de fond
+    future = executor.submit(decrypt_file, fichier_selectionne, dossier_selectionne, dossier_clé)
 
-    except Exception as e:
-        messagebox.showerror("Erreur", f"Erreur lors du décryptage : {e}")
+    def on_done(future):
+        try:
+            chemin = future.result()
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Erreur lors du décryptage : {e}")
+        else:
+            root.after(0, lambda: messagebox.showinfo("Succès", f"Fichier décrypté enregistré sous : {chemin}"))
+
+    future.add_done_callback(on_done)
+
 
 
 def choisir_fichier():
